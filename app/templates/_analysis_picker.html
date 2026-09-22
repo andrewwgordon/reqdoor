@@ -1,0 +1,57 @@
+{# Two-step, project-scoped artefact picker (Milestone 4, C22).
+
+   Included by the traceability and impact entry pages and by their result pages,
+   so "pick another artefact" never leaves the project you were already working
+   in. Plain GETs, no JavaScript: step 1 narrows to a project, step 2 chooses an
+   artefact inside it. `action_url` and `submit_label` are supplied by the caller. #}
+<form class="form-inline" method="get" action="{{ action_url }}" style="margin-bottom: 8px">
+    <div class="form-group">
+        <label for="project">{{ _("Project") }}</label>
+        <select name="project" id="project" class="form-control" onchange="this.form.submit()">
+            <option value="">{{ _("Choose a project…") }}</option>
+            {% for project in projects %}
+            <option value="{{ project.id }}" {% if project_id == project.id %}selected{% endif %}>
+                {{ project.project_code }} — {{ project.name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <noscript><button type="submit" class="btn btn-default">{{ _("Filter") }}</button></noscript>
+</form>
+
+{% if not projects %}
+<div class="alert alert-info">
+    {{ _("There are no projects yet.") }}
+    <a href="{{ url_for('ProjectView.add') }}">{{ _("Create one") }}</a>.
+</div>
+{% elif not project_id %}
+<div class="alert alert-dismissable">
+    {{ _("Pick a project above to list its artefacts.") }}
+</div>
+{% else %}
+<form class="form-inline" method="get" action="{{ action_url }}">
+    <input type="hidden" name="project" value="{{ project_id }}">
+    <div class="form-group">
+        <label for="pk">{{ _("Artefact") }}</label>
+        <select name="pk" id="pk" class="form-control" required>
+            {% for artefact in artefacts %}
+            <option value="{{ artefact.id }}">
+                [{{ artefact.id }}] {{ artefact.kind.value }} — {{ artefact.title }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
+    <a class="btn btn-default" href="{{ url_for('ArtefactView.list', _flt_0_project=project_id) }}">
+        {{ _("Browse artefacts") }}
+    </a>
+    {% if not artefacts %}
+    <p class="help-block">{{ _("This project has no artefacts yet.") }}</p>
+    {% elif truncated %}
+    <p class="help-block">
+        {{ _("Showing the first %(limit)s artefacts of this project — use the artefact
+        list to search within it.", limit=picker_limit) }}
+    </p>
+    {% endif %}
+</form>
+{% endif %}

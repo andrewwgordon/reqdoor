@@ -1,0 +1,50 @@
+{% extends "appbuilder/base.html" %}
+{% block content %}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      {{ _("Traceability") }} —
+      <a href="{{ url_for('ArtefactView.show', pk=root.id) }}">[{{ root.id }}] {{ root.title }}</a>
+    </h3>
+  </div>
+  <div class="panel-body">
+    <p>
+      {{ _("Colours group artefacts by kind.") }}
+      <strong>{{ _("Dashed edges are suspect links") }}</strong>
+      {{ _("(the artefact at the start changed after the link was last reviewed).") }}
+      {{ _("Double-click a box to open that artefact.") }}
+    </p>
+    <a class="btn btn-sm btn-default" href="{{ url_for('ImpactAnalysisView.analyse', pk=root.id) }}">
+      <i class="fa fa-sitemap"></i> {{ _("Impact report for this artefact") }}
+    </a>
+    <a class="btn btn-sm btn-default" href="{{ url_for('ArtefactView.show', pk=root.id) }}">
+      <i class="fa fa-file-text-o"></i> {{ _("Back to the artefact") }}
+    </a>
+    <div id="network" style="height: 640px; border: 1px solid #ccc; margin-top: 8px;"></div>
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading"><h4 class="panel-title">{{ _("Look at another artefact") }}</h4></div>
+  <div class="panel-body">{% include "_analysis_picker.html" %}</div>
+</div>
+
+<script src="{{ url_for('static', filename='js/vis-network.min.js') }}"></script>
+<script type="text/javascript">
+  const container = document.getElementById("network");
+  const nodes = new vis.DataSet({{ nodes_json | safe }});
+  const edges = new vis.DataSet({{ edges_json | safe }});
+  const nodeUrls = {{ node_urls_json | safe }};
+  const network = new vis.Network(container, { nodes, edges }, {
+    height: "100%",
+    nodes: { shape: "box", font: { size: 12 } },
+    edges: { arrows: "to", width: 1.5 },
+    physics: { stabilization: true }
+  });
+  network.on("doubleClick", function (params) {
+    if (params.nodes.length && nodeUrls[params.nodes[0]]) {
+      window.location.href = nodeUrls[params.nodes[0]];
+    }
+  });
+</script>
+{% endblock %}

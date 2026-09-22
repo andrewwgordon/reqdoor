@@ -1,0 +1,84 @@
+{% extends "appbuilder/base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <h2>{{ _("Requirements governance at a glance") }}</h2>
+        <p class="text-muted">
+            {{ _("The loop runs: capture artefacts, version and approve them, freeze a
+            baseline, review it with per-artefact verdicts, then trace and analyse
+            impact — and control what changes afterwards.") }}
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    {% set steps = [
+        (_("1. Capture"), "fa-cubes", [
+            (url_for("ProjectView.list"), _("Projects")),
+            (url_for("ArtefactView.add"), _("Add an artefact")),
+            (url_for("RelationshipView.add"), _("Add a trace link")),
+        ], _("Every save records an immutable version of the artefact.")),
+        (_("2. Approve & baseline"), "fa-lock", [
+            (url_for("ArtefactView.list"), _("Artefacts")),
+            (url_for("BaselineView.list"), _("Baselines")),
+        ], _("Approve an artefact, then baseline a project from its row action.")),
+        (_("3. Review"), "fa-check-square-o", [
+            (url_for("ReviewView.list"), _("Reviews")),
+            (filters.active_reviews, _("Active reviews")),
+        ], _("Create a review from a baseline; verdicts freeze to what was reviewed.")),
+        (_("4. Analyse & change"), "fa-search", [
+            (url_for("TraceGraphView.index"), _("Traceability graph")),
+            (url_for("ImpactAnalysisView.index"), _("Impact report")),
+            (url_for("ChangeRequestView.list"), _("Change requests")),
+        ], _("Suspect links appear when a source artefact moved after the link did.")),
+    ] %}
+    {% for title, icon, links, note in steps %}
+    <div class="col-lg-3 col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa {{ icon }}"></i> {{ title }}</h3>
+            </div>
+            <div class="panel-body">
+                <p>{{ note }}</p>
+                {% for href, label in links %}
+                <a class="btn btn-sm btn-default" href="{{ href }}">{{ label }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row">
+    {% set tiles = [
+        (_("Projects"), stats.projects, url_for("ProjectView.list"), ""),
+        (_("Artefacts"), stats.artefacts, url_for("ArtefactView.list"), ""),
+        (_("Draft"), stats.draft_artefacts, filters.draft_artefacts, "text-warning"),
+        (_("Approved"), stats.approved_artefacts, filters.approved_artefacts, "text-success"),
+        (_("Baselines"), stats.baselines, url_for("BaselineView.list"), ""),
+        (_("Open reviews"), stats.open_reviews, filters.active_reviews, ""),
+        (_("Open changes"), stats.open_changes, filters.open_changes, ""),
+        (_("Suspect links"), stats.suspect_links, filters.suspect_links, "text-danger"),
+        (_("Untraced artefacts"), stats.orphan_artefacts, filters.orphan_artefacts, "text-danger"),
+    ] %}
+    {% for label, value, href, css in tiles %}
+    <div class="col-lg-2 col-md-4 col-sm-6">
+        <a class="thumbnail" href="{{ href }}" style="text-align:center; padding:12px 6px;">
+            <span class="{{ css }}" style="font-size:26px; font-weight:bold;">{{ value }}</span>
+            <span>{{ label }}</span>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <p class="text-muted">
+            {{ _("Tip: the menu is ordered as the loop above — Requirements, Governance,
+            Analysis, Dashboard, Administration — and the indented entries are saved
+            filters you can keep using.") }}
+        </p>
+    </div>
+</div>
+{% endblock %}

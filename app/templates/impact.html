@@ -1,0 +1,106 @@
+{% extends "appbuilder/base.html" %}
+{% block content %}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      {{ _("Impact analysis") }} —
+      <a href="{{ url_for('ArtefactView.show', pk=root.id) }}">[{{ root.id }}] {{ root.title }}</a>
+    </h3>
+  </div>
+  <div class="panel-body">
+    <a class="btn btn-sm btn-default" href="{{ url_for('TraceGraphView.show', pk=root.id) }}">
+      <i class="fa fa-share-alt"></i> {{ _("Open traceability graph") }}
+    </a>
+    <a class="btn btn-sm btn-default" href="{{ url_for('ArtefactView.edit', pk=root.id) }}">
+      <i class="fa fa-edit"></i> {{ _("Edit this artefact") }}
+    </a>
+
+    <span style="margin-left: 12px">
+      {{ _("Hops") }}:
+      {% for d in range(1, max_depth + 1) %}
+        <a class="btn btn-sm {% if d == depth %}btn-primary{% else %}btn-default{% endif %}"
+           href="{{ url_for('ImpactAnalysisView.analyse', pk=root.id, depth=d) }}">{{ d }}</a>
+      {% endfor %}
+    </span>
+    <p class="help-block" style="margin-top: 6px">
+      {{ _("Depth %(n)s: how far along trace links to look. Forward = what this affects, "
+           "back = what depends on this.", n=depth) }}
+    </p>
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4 class="panel-title">{{ _("Impacted artefacts") }} ({{ impacted|length }})</h4>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>{{ _("Hops") }}</th><th>{{ _("Direction") }}</th>
+          <th>{{ _("Type") }}</th><th>{{ _("Title") }}</th>
+          <th>{{ _("Lifecycle") }}</th><th>{{ _("Actions") }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in impacted %}
+        {% set artefact = row.artefact %}
+        <tr>
+          <td>{{ row.depth }}</td>
+          <td>
+            {% if row.forward %}<span class="label label-default">{{ _("forward") }}</span> {% endif %}
+            {% if row.reverse %}<span class="label label-default">{{ _("back") }}</span>{% endif %}
+          </td>
+          <td>{{ artefact.kind.value }}</td>
+          <td>
+            <a href="{{ url_for('ArtefactView.show', pk=artefact.id) }}">[{{ artefact.id }}] {{ artefact.title }}</a>
+          </td>
+          <td>{{ artefact.status.value }}</td>
+          <td>
+            <a href="{{ url_for('ImpactAnalysisView.analyse', pk=artefact.id, depth=depth) }}">{{ _("impact") }}</a> ·
+            <a href="{{ url_for('TraceGraphView.show', pk=artefact.id) }}">{{ _("graph") }}</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">{{ _("No impacted artefacts found — nothing is traced to this one at this depth.") }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="panel panel-warning">
+  <div class="panel-heading">
+    <h4 class="panel-title">{{ _("Suspect links") }} ({{ suspects|length }})</h4>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead><tr><th>{{ _("Link") }}</th><th>{{ _("This link means") }}</th></tr></thead>
+      <tbody>
+        {% for rel in suspects %}
+        <tr>
+          <td>
+            <a href="{{ url_for('ArtefactView.show', pk=rel.source.id) }}">{{ rel.source.title }}</a>
+            <strong>{{ rel.relationship_type.display_name }}</strong>
+            <a href="{{ url_for('ArtefactView.show', pk=rel.target.id) }}">{{ rel.target.title }}</a>
+            — <a href="{{ url_for('RelationshipView.show', pk=rel.id) }}">
+                {{ _("open the link to mark it reviewed") }}
+            </a>
+          </td>
+          <td>{{ _("The artefact at the start changed after this link was last reviewed.") }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="2">{{ _("No suspect links in scope.") }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading"><h4 class="panel-title">{{ _("Analyse another artefact") }}</h4></div>
+  <div class="panel-body">
+    {% include "_analysis_picker.html" %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+[project]
+name = "reqdoor"
+version = "0.1.0"
+description = "Requirements Management concept solution"
+readme = "README.md"
+authors = [
+    { name = "Andrew Gordon", email = "andrew.gordon68@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "flask-appbuilder>=5.2",
+    "markupsafe>=3.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
